@@ -4,6 +4,8 @@ A traffic light in your **macOS menu bar** (top right, next to the clock and
 Wi-Fi). No sounds, no jumping back to the terminal — the status is always in
 view:
 
+<img width="299" height="123" alt="image" src="https://github.com/user-attachments/assets/84da231c-b720-4c34-9216-cda6152b7b23" />
+
 - 🟢 **idle** — Claude finished, ready for your next prompt
 - 🟡 **working** — Claude is working on a task
 - 🟠 **waiting** — idle and waiting for your next prompt (`idle_prompt`)
