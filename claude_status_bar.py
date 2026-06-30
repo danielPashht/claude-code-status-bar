@@ -17,6 +17,7 @@ import pathlib
 import time
 
 import rumps
+from AppKit import NSApplication, NSApplicationActivationPolicyAccessory
 
 STATUS_DIR = pathlib.Path.home() / ".claude" / "status"
 STALE_SECONDS = 60 * 30  # сессии без обновлений дольше 30 мин считаем мёртвыми
@@ -94,4 +95,9 @@ class ClaudeStatusApp(rumps.App):
 
 
 if __name__ == "__main__":
+    # Run as a menu-bar-only accessory: keeps the status bar icon but
+    # hides the Dock icon (no Python rocket in the Dock / app switcher).
+    NSApplication.sharedApplication().setActivationPolicy_(
+        NSApplicationActivationPolicyAccessory
+    )
     ClaudeStatusApp().run()
