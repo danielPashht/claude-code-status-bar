@@ -1,39 +1,40 @@
-# Claude Code — визуальный статус-индикатор для macOS menu bar
+# Claude Code — visual status indicator for the macOS menu bar
 
-Светофор в **строке меню macOS** (menu bar, справа сверху, рядом с часами
-и Wi-Fi). Никаких звуков, никакого возврата в терминал — статус всегда на виду:
+A traffic light in your **macOS menu bar** (top right, next to the clock and
+Wi-Fi). No sounds, no jumping back to the terminal — the status is always in
+view:
 
-- 🟢 **idle** — Claude закончил, готов к следующему промпту
-- 🟡 **working** — Claude работает над задачей
-- 🟠 **waiting** — простаивает и ждёт твоего следующего промпта (`idle_prompt`)
-- 🔴 **needs permission** — ждёт твоего разрешения на действие (`permission_prompt`)
-- ⚪️ — нет активных сессий Claude Code
+- 🟢 **idle** — Claude finished, ready for your next prompt
+- 🟡 **working** — Claude is working on a task
+- 🟠 **waiting** — idle and waiting for your next prompt (`idle_prompt`)
+- 🔴 **needs permission** — waiting for you to approve an action (`permission_prompt`)
+- ⚪️ — no active Claude Code sessions
 
-Клик по иконке открывает список всех сессий с проектами и их состояниями.
-Если открыто несколько сессий, иконка показывает самую «срочную» по
-приоритету: 🔴 > 🟠 > 🟡 > 🟢.
+Click the icon to open a list of all sessions with their projects and states.
+If several sessions are open, the icon shows the most "urgent" one by priority:
+🔴 > 🟠 > 🟡 > 🟢.
 
-## Как это работает
+## How it works
 
-1. Claude Code дёргает хуки на ключевых событиях сессии (`UserPromptSubmit`,
+1. Claude Code fires hooks on key session events (`UserPromptSubmit`,
    `Notification`, `Stop`, `SessionStart/End`).
-2. Каждый хук — это `notify_status.py`, который пишет JSON-файл со
-   статусом в `~/.claude/status/<session_id>.json`.
-3. `claude_status_bar.py` — отдельное приложение в menu bar (через
-   библиотеку `rumps`), которое раз в ~1.5 сек читает эти файлы и красит
-   иконку. Несколько параллельных сессий Claude Code агрегируются:
-   если хоть одна ждёт твоего внимания — красный, иначе если хоть одна
-   работает — жёлтый, иначе зелёный.
+2. Each hook is `notify_status.py`, which writes a JSON status file to
+   `~/.claude/status/<session_id>.json`.
+3. `claude_status_bar.py` is a separate menu bar app (using the `rumps`
+   library) that reads those files about every 1.5s and colors the icon.
+   Multiple parallel Claude Code sessions are aggregated: if any one needs
+   your attention the icon is red, otherwise if any is working it's yellow,
+   otherwise green.
 
-## Установка
+## Installation
 
-### 1. Зависимости
+### 1. Dependencies
 
 ```bash
 pip3 install rumps
 ```
 
-### 2. Хук-скрипт
+### 2. Hook script
 
 ```bash
 mkdir -p ~/.claude/hooks
@@ -41,58 +42,66 @@ cp notify_status.py ~/.claude/hooks/notify_status.py
 chmod +x ~/.claude/hooks/notify_status.py
 ```
 
-### 3. Конфиг хуков
+### 3. Hook config
 
-Открой (или создай) `~/.claude/settings.json`. Если файла ещё нет —
-просто скопируй туда `settings_hooks_snippet.json` целиком. Если файл
-уже существует и в нём есть свои хуки или другие настройки — аккуратно
-влей секцию `"hooks"` из сниппета в свой JSON (объедини массивы, если
-по тем же событиям уже что-то висит, например твой `/housekeeping`).
+Open (or create) `~/.claude/settings.json`. If the file doesn't exist yet,
+just copy `settings_hooks_snippet.json` into it as-is. If the file already
+exists and has its own hooks or other settings, carefully merge the `"hooks"`
+section from the snippet into your JSON (combine the arrays if something is
+already bound to the same events, e.g. your own `/housekeeping`).
 
-Проверь, что подхватилось:
+Verify it was picked up by running:
 
 ```
 /hooks
 ```
-внутри Claude Code — должен показать пять новых хуков.
+inside Claude Code — it should show the five new hooks.
 
-### 4. Меню-бар приложение
+### 4. Menu bar app
 
-Запусти вручную, чтобы проверить, что иконка появляется:
+Run it manually to confirm the icon appears:
 
 ```bash
 python3 claude_status_bar.py
 ```
 
-В строке меню должен появиться ⚪️ (нет активных сессий), который
-позеленеет/пожелтеет/покраснеет, когда ты откроешь Claude Code и
-начнёшь с ним работать. Клик по иконке — список сессий с проектами.
+A ⚪️ (no active sessions) should appear in the menu bar, turning
+green/yellow/red once you open Claude Code and start working. Click the icon
+for the list of sessions and their projects.
 
-### 5. Автозапуск при логине (опционально)
+### 5. Launch at login (optional)
 
 ```bash
 mkdir -p ~/claude-status-bar
 cp claude_status_bar.py ~/claude-status-bar/
 
-# подставь реальный путь в plist вместо REPLACE_WITH_FULL_PATH
+# substitute the real path into the plist instead of REPLACE_WITH_FULL_PATH
 sed -i '' "s|REPLACE_WITH_FULL_PATH|$HOME/claude-status-bar|" com.claude.statusbar.plist
 
 cp com.claude.statusbar.plist ~/Library/LaunchAgents/
 launchctl load ~/Library/LaunchAgents/com.claude.statusbar.plist
 ```
 
-Чтобы остановить/выгрузить:
+To stop/unload:
 ```bash
 launchctl unload ~/Library/LaunchAgents/com.claude.statusbar.plist
 ```
 
-## Идеи для доработки
+> **Note:** the plist points at `/usr/local/bin/python3` (Intel Homebrew). On
+> Apple Silicon, Python is usually at `/opt/homebrew/bin/python3` — update the
+> path in `com.claude.statusbar.plist` accordingly.
 
-- Заменить эмодзи-кружки на нативные NSImage-иконки (template images),
-  если хочется монохромный вид под системную тему.
-- PreToolUse/PostToolUse можно тоже завести в notify_status.py, если
-  захочешь видеть не просто "working", а конкретно "running tool: Bash"
-  во всплывающем меню.
-- Если сессии Claude Code иногда падают без SessionEnd — это уже
-  покрыто: `STALE_SECONDS` в `claude_status_bar.py` чистит зависшие
-  записи через 30 минут без обновлений.
+## Ideas for improvement
+
+- Replace the emoji circles with native NSImage icons (template images) for a
+  monochrome look that follows the system theme.
+- `PreToolUse`/`PostToolUse` could also feed into `notify_status.py` if you
+  want to see not just "working" but specifically "running tool: Bash" in the
+  popup menu.
+- If Claude Code sessions sometimes die without `SessionEnd`, that's already
+  covered: `STALE_SECONDS` in `claude_status_bar.py` clears stuck entries
+  after 30 minutes without updates.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
