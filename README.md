@@ -26,7 +26,19 @@ If several sessions are open, the icon shows the most "urgent" one by priority:
    your attention the icon is red, otherwise if any is working it's yellow,
    otherwise green.
 
-## Installation
+## Quick install
+
+```bash
+./install.sh              # installs deps + hook, wires up settings.json
+./install.sh --autostart  # also installs the launch-at-login agent
+```
+
+The script checks for macOS and `python3`, installs `rumps`, copies the hook,
+and **safely merges** the hooks into your existing `~/.claude/settings.json`
+(it backs the file up first and is idempotent — re-running won't duplicate
+anything). For the manual steps, see below.
+
+## Manual installation
 
 ### 1. Dependencies
 
