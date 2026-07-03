@@ -1,5 +1,7 @@
 # Claude Code — visual status indicator for the macOS menu bar
 
+> Keep an eye on your AI agent without cluttering your workflow.
+
 A traffic light in your **macOS menu bar** (top right, next to the clock and
 Wi-Fi). No sounds, no jumping back to the terminal — the status is always in
 view:
